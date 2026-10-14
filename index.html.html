@@ -89,8 +89,31 @@ p{margin:0 0 14px;max-width:60ch}
 .star-row input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .star-text{margin-left:10px;font:400 .9rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+[hidden]{display:none!important}
+.ratings{margin-top:48px;max-width:640px}
+.ratings h3{margin:0 0 16px;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
+.rating-summary{display:grid;grid-template-columns:auto 1fr;gap:16px 32px;align-items:center;padding:20px 24px;background:var(--panel);border-radius:6px}
+.avg{display:flex;flex-direction:column;gap:4px}
+.avg-num{font-size:3rem;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.avg-stars{font-size:1.25rem;color:var(--accent);letter-spacing:.1em}
+.avg-count{font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.breakdown{display:grid;gap:6px;min-width:0}
+.bar-row{display:grid;grid-template-columns:2.4rem minmax(0,1fr) 2rem;gap:10px;align-items:center;font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.bar-track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent)}
+.bar-count{text-align:right;font-variant-numeric:tabular-nums}
+.reviews{list-style:none;margin:20px 0 0;padding:0}
+.review{padding:16px 0;border-bottom:1px solid var(--line)}
+.review:last-child{border-bottom:0}
+.review-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.review-name{font-weight:800;overflow-wrap:anywhere}
+.review-stars{color:var(--accent);letter-spacing:.08em}
+.review-date{margin-left:auto;font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.review-text{margin:6px 0 0;max-width:60ch;white-space:pre-wrap;overflow-wrap:anywhere}
+.ratings-empty{margin:0;padding:24px;max-width:none;border:2px dashed var(--line);border-radius:6px}
+.ratings-note,.ratings-more{margin:16px 0 0;max-width:none;font:400 .9rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.95rem}
-@media (max-width:560px){.lang{grid-template-columns:1fr;gap:0}.converter{grid-template-columns:1fr}.demo-grid{grid-template-columns:1fr}.hang-layout{grid-template-columns:1fr}}
+@media (max-width:560px){.lang{grid-template-columns:1fr;gap:0}.converter{grid-template-columns:1fr}.demo-grid{grid-template-columns:1fr}.hang-layout{grid-template-columns:1fr}.rating-summary{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -232,6 +255,22 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 <div class="btn-row"><button type="submit" id="rate-send">Send rating</button></div>
 <p class="demo-msg" id="rate-msg" role="status" aria-live="polite"></p>
 </form>
+
+<div class="ratings">
+<h3>Ratings</h3>
+<div class="rating-summary" id="rating-summary" hidden>
+<div class="avg">
+<span class="avg-num" id="avg-num"></span>
+<span class="avg-stars" id="avg-stars" aria-hidden="true"></span>
+<span class="avg-count" id="avg-count"></span>
+</div>
+<div class="breakdown" id="breakdown"></div>
+</div>
+<p class="ratings-empty" id="ratings-empty">No ratings yet. Yours could be the first.</p>
+<ul class="reviews" id="reviews" hidden></ul>
+<p class="ratings-more" id="ratings-more" hidden></p>
+<p class="ratings-note" id="ratings-note"></p>
+</div>
 </section>
 </main>
 <footer><div class="wrap">&copy; 2026 Brahim Saadi</div></footer>
@@ -707,14 +746,27 @@ ORDER BY title;`,
 </script>
 
 <script>
-// ===== Rating form =====
-// WHERE RATINGS GO: paste a form address between the quotes below, for example a
-// Formspree address like "https://formspree.io/f/yourFormId". The form then sends
-// each rating there. While this is empty, a rating is only saved in the visitor's
-// own browser, so you will not receive it.
+// ===== Rating form and ratings list =====
+// WHERE RATINGS GO
+// A web page on its own cannot keep anything that other visitors can see. So by default
+// a rating is saved in the visitor's own browser, and only that visitor sees it.
+// To show everyone's ratings, connect an online service you control and paste its
+// addresses below:
+//   RATINGS_ENDPOINT: where each new rating is sent (POST, as JSON like
+//                     {"name": "Sara", "rating": 5, "feedback": "Nice"}).
+//   RATINGS_FEED:     where all the ratings are read from (GET). It must return JSON,
+//                     a list like [{"name": "Sara", "rating": 5, "feedback": "Nice",
+//                     "date": "2026-10-13T17:00:00Z"}].
+// Leave both empty to keep ratings in the visitor's own browser.
 const RATINGS_ENDPOINT = "";
+const RATINGS_FEED = "";
 
 (function () {
+  const STORAGE_KEY = "portfolio-ratings";
+  const SHOW_MAX = 20;   // how many ratings to list at most
+
+  // ---- checking, reading and saving ----
+
   // Checks the form. Returns {error: "..."} or {data: {...}} with the cleaned values.
   function checkRating(name, rating, feedback) {
     name = name.trim();
@@ -722,6 +774,37 @@ const RATINGS_ENDPOINT = "";
     if (name === "") return {error: "Please type your name."};
     if (!(rating >= 1 && rating <= 5)) return {error: "Please choose a rating from 1 to 5 stars."};
     return {data: {name: name, rating: rating, feedback: feedback}};
+  }
+
+  // The ratings saved in this browser (an empty list if there are none or storage is blocked).
+  function readLocal() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  // Saves a rating in this browser. Returns false if the browser blocked it.
+  function saveLocal(data) {
+    try {
+      const saved = readLocal();
+      saved.push(Object.assign({}, data, {date: new Date().toISOString()}));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Reads every rating from the online service. Throws if that fails.
+  async function loadFeed() {
+    const response = await fetch(RATINGS_FEED);
+    if (!response.ok) throw new Error("The ratings could not be loaded.");
+    const body = await response.json();
+    if (Array.isArray(body)) return body;
+    return body && Array.isArray(body.ratings) ? body.ratings : [];
   }
 
   // Sends the rating. Returns "sent", "saved" or "unavailable"; throws if sending fails.
@@ -733,16 +816,22 @@ const RATINGS_ENDPOINT = "";
         body: JSON.stringify(data)
       });
       if (!response.ok) throw new Error("The rating could not be sent.");
+      if (!RATINGS_FEED) saveLocal(data);   // so the visitor still sees it in the list below
       return "sent";
     }
-    try {
-      const saved = JSON.parse(localStorage.getItem("portfolio-ratings") || "[]");
-      saved.push(Object.assign({}, data, {date: new Date().toISOString()}));
-      localStorage.setItem("portfolio-ratings", JSON.stringify(saved));
-      return "saved";
-    } catch (error) {
-      return "unavailable";   // the browser blocked storage
-    }
+    return saveLocal(data) ? "saved" : "unavailable";
+  }
+
+  // Turns one saved or loaded item into a clean rating, or null if it is not usable.
+  // Anything coming from outside is treated as untrusted, so every field is checked.
+  function cleanRating(item) {
+    if (!item || typeof item !== "object") return null;
+    const name = typeof item.name === "string" ? item.name.trim().slice(0, 60) : "";
+    const rating = Number(item.rating);
+    if (name === "" || !Number.isInteger(rating) || rating < 1 || rating > 5) return null;
+    const feedback = typeof item.feedback === "string" ? item.feedback.trim().slice(0, 1000) : "";
+    const time = new Date(item.date).getTime();   // NaN when the date is missing or invalid
+    return {name: name, rating: rating, feedback: feedback, time: Number.isNaN(time) ? 0 : time};
   }
 
   // ---- page wiring ----
@@ -755,6 +844,20 @@ const RATINGS_ENDPOINT = "";
   const radios = [1, 2, 3, 4, 5].map(i => document.getElementById("star" + i));
   const glyphs = [1, 2, 3, 4, 5].map(i => document.getElementById("glyph" + i));
   const starLabels = [1, 2, 3, 4, 5].map(i => document.getElementById("star-label-" + i));
+
+  const summary = document.getElementById("rating-summary");
+  const averageNumber = document.getElementById("avg-num");
+  const averageStars = document.getElementById("avg-stars");
+  const averageCount = document.getElementById("avg-count");
+  const breakdown = document.getElementById("breakdown");
+  const emptyText = document.getElementById("ratings-empty");
+  const list = document.getElementById("reviews");
+  const moreText = document.getElementById("ratings-more");
+  const noteText = document.getElementById("ratings-note");
+
+  const dateFormat = new Intl.DateTimeFormat("en-GB", {day: "numeric", month: "short", year: "numeric"});
+  let ratings = [];        // the clean ratings currently shown
+  let feedFailed = false;  // true when the online list could not be loaded
 
   function say(text, isError) {
     message.textContent = text;
@@ -774,6 +877,104 @@ const RATINGS_ENDPOINT = "";
     });
     starText.textContent = n ? n + " out of 5" : "Choose a rating";
   }
+
+  // ---- the ratings list ----
+
+  // Creates an element with a CSS class and plain text (never HTML, so names are safe).
+  function make(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.classList.add(className);
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+
+  function starsText(n) {
+    return "★".repeat(n) + "☆".repeat(5 - n);
+  }
+
+  // Redraws the summary, the bars and the list from the "ratings" variable.
+  function renderRatings() {
+    const count = ratings.length;
+    summary.hidden = count === 0;
+    list.hidden = count === 0;
+    emptyText.hidden = count !== 0;
+
+    if (!RATINGS_FEED) {
+      noteText.textContent = "Ratings are saved in this browser only. Other visitors cannot see them.";
+    } else if (feedFailed) {
+      noteText.textContent = "Could not load everyone's ratings right now. Showing the ones saved on this device.";
+    } else {
+      noteText.textContent = "";
+    }
+
+    list.textContent = "";
+    breakdown.textContent = "";
+    moreText.hidden = true;
+    if (count === 0) return;
+
+    // The average, written like 4.3, with that many stars filled in.
+    const total = ratings.reduce((sum, r) => sum + r.rating, 0);
+    const average = total / count;
+    averageNumber.textContent = average.toFixed(1);
+    averageStars.textContent = starsText(Math.round(average));
+    averageCount.textContent = count + (count === 1 ? " rating" : " ratings");
+
+    // One bar for each star level, from 5 down to 1.
+    for (let stars = 5; stars >= 1; stars--) {
+      const howMany = ratings.filter(r => r.rating === stars).length;
+      const row = make("div", "bar-row");
+      row.appendChild(make("span", "bar-label", stars + " ★"));
+      const track = make("div", "bar-track");
+      track.setAttribute("aria-hidden", "true");
+      const fill = make("div", "bar-fill");
+      fill.style.width = (howMany / count * 100) + "%";
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(make("span", "bar-count", String(howMany)));
+      breakdown.appendChild(row);
+    }
+
+    // The newest ratings first. Ratings without a date go last.
+    const newestFirst = ratings.slice().sort((a, b) => b.time - a.time);
+    newestFirst.slice(0, SHOW_MAX).forEach(function (r) {
+      const item = make("li", "review");
+      const head = make("div", "review-head");
+      head.appendChild(make("strong", "review-name", r.name));
+      const stars = make("span", "review-stars", starsText(r.rating));
+      stars.setAttribute("role", "img");
+      stars.setAttribute("aria-label", r.rating + " out of 5");
+      head.appendChild(stars);
+      if (r.time) head.appendChild(make("span", "review-date", dateFormat.format(new Date(r.time))));
+      item.appendChild(head);
+      if (r.feedback) item.appendChild(make("p", "review-text", r.feedback));
+      list.appendChild(item);
+    });
+
+    if (count > SHOW_MAX) {
+      moreText.textContent = "Showing the latest " + SHOW_MAX + " of " + count + " ratings.";
+      moreText.hidden = false;
+    }
+  }
+
+  // Gets the ratings (from the online service, or this browser) and shows them.
+  async function refreshRatings() {
+    let items;
+    feedFailed = false;
+    if (RATINGS_FEED) {
+      try {
+        items = await loadFeed();
+      } catch (error) {
+        feedFailed = true;
+        items = readLocal();
+      }
+    } else {
+      items = readLocal();
+    }
+    ratings = items.map(cleanRating).filter(Boolean);
+    renderRatings();
+  }
+
+  // ---- the form ----
 
   radios.forEach(function (radio) {
     radio.addEventListener("change", function () { paintStars(selectedRating()); });
@@ -808,6 +1009,7 @@ const RATINGS_ENDPOINT = "";
       }
       form.reset();
       paintStars(0);
+      refreshRatings();   // show the new rating in the list
     } catch (error) {
       say("Sorry, the rating could not be sent. Please try again.", true);
     } finally {
@@ -816,6 +1018,7 @@ const RATINGS_ENDPOINT = "";
   });
 
   paintStars(0);
+  refreshRatings();
 })();
 </script>
 </body>
