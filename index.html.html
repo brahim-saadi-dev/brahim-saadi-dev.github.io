@@ -864,6 +864,8 @@ const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6
   }
 
   // Sends the rating. Returns "sent", "saved" or "unavailable"; throws if sending fails.
+  
+  // Sends the rating and logs it to Discord.
   async function sendRating(data) {
     if (RATINGS_ENDPOINT) {
       const response = await fetch(RATINGS_ENDPOINT, {
@@ -871,10 +873,26 @@ const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6
         headers: {"Content-Type": "text/plain;charset=utf-8"},
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("The rating could not be sent.");
-      if (!RATINGS_FEED) saveLocal(data);   // so the visitor still sees it in the list below
+
+      if (!response.ok) {
+        throw new Error("The rating could not be sent.");
+      }
+
+      if (!RATINGS_FEED) saveLocal(data);
+
+      // Log the successful rating submission to Discord.
+      fetch("/api/log", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          event: "rating",
+          details: "A visitor submitted a rating."
+        })
+      }).catch(() => {});
+
       return "sent";
     }
+
     return saveLocal(data) ? "saved" : "unavailable";
   }
 
