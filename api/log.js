@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   // Accept requests from your own website only.
   const origin = req.headers.origin;
-  if (origin !== "https://brahimsaadi.vercel.app") {
+  if (origin !== "https://ibrahimsaadi.vercel.app") {
     return res.status(403).json({ error: "Forbidden origin" });
   }
 
