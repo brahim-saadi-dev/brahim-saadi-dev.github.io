@@ -114,9 +114,64 @@ p{margin:0 0 14px;max-width:60ch}
 .ratings-note,.ratings-more{margin:16px 0 0;max-width:none;font:400 .9rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.95rem}
 @media (max-width:560px){.lang{grid-template-columns:1fr;gap:0}.converter{grid-template-columns:1fr}.demo-grid{grid-template-columns:1fr}.hang-layout{grid-template-columns:1fr}.rating-summary{grid-template-columns:1fr}}
+/* Custom mouse cursor — desktop only */
+#custom-cursor {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body,
+  body a,
+  body button,
+  body input,
+  body textarea,
+  body select,
+  body label {
+    cursor: none !important;
+  }
+
+  #custom-cursor {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition:
+      width 150ms ease,
+      height 150ms ease,
+      background 150ms ease,
+      opacity 100ms ease;
+  }
+
+  #custom-cursor.visible {
+    opacity: 1;
+  }
+
+  #custom-cursor.hovering {
+    width: 26px;
+    height: 26px;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #custom-cursor {
+    transition: none;
+  }
+}
 </style>
 </head>
 <body>
+    <div id="custom-cursor" aria-hidden="true"></div>
+    
+
 <header><div class="wrap"><strong>Brahim Saadi</strong><nav><a href="#about">About</a><a href="#skills">Skills</a><a href="#projects">Projects</a></nav></div></header>
 <main class="wrap">
 <div class="hero">
@@ -127,13 +182,13 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 }</code></pre>
 <p class="run">$ ./portfolio</p>
 <h1>Brahim Saadi<span class="cursor" aria-hidden="true"></span></h1>
-<p class="role">Student at 1337 School, learning to build software from the ground up.</p>
+<p class="role">Data analyst passionate about transforming data into insights and helping businesses make smarter, data-driven decisions.</p>
 </div>
 
 <section id="about">
 <h2>About</h2>
-<p>I study at 1337 School, where learning is project-based and done together with other students instead of from lectures. That pushed me to read documentation, debug my own code, and explain my thinking to people who are stuck on the same problem.</p>
-<p>I like understanding how things work under the hood, which is why I started with C.</p>
+<p>I’m a data analyst passionate about turning raw data into meaningful insights. I enjoy analyzing trends, identifying patterns, and using data to solve problems and support better decision-making.</p>
+<p>I’m always eager to learn new tools, improve my analytical skills, and take on new challenges.</p>
 </section>
 
 <section id="skills">
@@ -758,8 +813,9 @@ ORDER BY title;`,
 //                     a list like [{"name": "Sara", "rating": 5, "feedback": "Nice",
 //                     "date": "2026-10-13T17:00:00Z"}].
 // Leave both empty to keep ratings in the visitor's own browser.
-const RATINGS_ENDPOINT = "";
-const RATINGS_FEED = "";
+
+const RATINGS_ENDPOINT = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6xE0aHjvnQxouTRqClxj0bQbBlt5Iw7mc1H8ZJpRdAfRF8NkNoeA/exec";
+const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6xE0aHjvnQxouTRqClxj0bQbBlt5Iw7mc1H8ZJpRdAfRF8NkNoeA/exec";
 
 (function () {
   const STORAGE_KEY = "portfolio-ratings";
@@ -812,7 +868,7 @@ const RATINGS_FEED = "";
     if (RATINGS_ENDPOINT) {
       const response = await fetch(RATINGS_ENDPOINT, {
         method: "POST",
-        headers: {"Content-Type": "application/json", "Accept": "application/json"},
+        headers: {"Content-Type": "text/plain;charset=utf-8"},
         body: JSON.stringify(data)
       });
       if (!response.ok) throw new Error("The rating could not be sent.");
@@ -1019,6 +1075,47 @@ const RATINGS_FEED = "";
 
   paintStars(0);
   refreshRatings();
+})();
+</script>
+<script>
+(() => {
+  const cursor = document.getElementById("custom-cursor");
+  const desktopPointer = window.matchMedia(
+    "(hover: hover) and (pointer: fine)"
+  );
+
+  if (!cursor || !desktopPointer.matches) return;
+
+  document.addEventListener("mousemove", (event) => {
+    cursor.style.left = event.clientX + "px";
+    cursor.style.top = event.clientY + "px";
+    cursor.classList.add("visible");
+  });
+
+  document.addEventListener("mouseout", (event) => {
+    if (!event.relatedTarget) {
+      cursor.classList.remove("visible");
+    }
+  });
+
+  document.addEventListener("mouseover", (event) => {
+    const target = event.target;
+
+    if (!(target instanceof Element)) return;
+
+    cursor.classList.toggle(
+      "hovering",
+      Boolean(target.closest(
+        "a, button, input, textarea, select, label"
+      ))
+    );
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      cursor.classList.remove("visible");
+    }
+  });
 })();
 </script>
 </body>
