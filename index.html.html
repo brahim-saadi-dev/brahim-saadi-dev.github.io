@@ -4,27 +4,72 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Brahim Saadi – Portfolio</title>
+<script>try{var t=localStorage.getItem("portfolio-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f1f3f8;--fg:#14213d;--muted:#566079;--panel:#e4e8f2;--line:#c9d0e2;--accent:#2f4bff;--code-kw:#2f4bff;--code-str:#b4380f;
+/* Palette: white and crimson, with gold used only for stars and code strings.
+   Layout: sticky header with search, theme and contact buttons above a single reading column. */
+:root{color-scheme:light;--bg:#ffffff;--fg:#16181d;--muted:#5b616d;--panel:#f7f5f4;--line:#e7e2e1;
+--accent:#c8102e;--btn:#c8102e;--btn-hover:#a30d26;--on-btn:#ffffff;--tint:#fcebee;
+--star:#c77d00;--code-kw:#c8102e;--code-str:#8a5a00;--danger:#b00020;
+--scrim:rgba(22,24,29,.45);--shadow:0 1px 2px rgba(22,24,29,.06),0 12px 32px rgba(22,24,29,.14);--radius:10px;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1220;--fg:#e6e9f2;--muted:#9aa4bd;--panel:#161d31;--line:#2a3350;--accent:#8ea0ff;--code-kw:#8ea0ff;--code-str:#ffb48f}}
-:root[data-theme="dark"]{--bg:#0d1220;--fg:#e6e9f2;--muted:#9aa4bd;--panel:#161d31;--line:#2a3350;--accent:#8ea0ff;--code-kw:#8ea0ff;--code-str:#ffb48f}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#111214;--fg:#f3f3f4;--muted:#a4a8b1;--panel:#1a1b1f;--line:#2c2e34;--accent:#ff6b73;--btn:#d62839;--btn-hover:#e0303f;--on-btn:#ffffff;--tint:#2a1519;--star:#f5b942;--code-kw:#ff8b93;--code-str:#f2c14e;--danger:#ff8a90;--scrim:rgba(0,0,0,.6);--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45)}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#111214;--fg:#f3f3f4;--muted:#a4a8b1;--panel:#1a1b1f;--line:#2c2e34;--accent:#ff6b73;--btn:#d62839;--btn-hover:#e0303f;--on-btn:#ffffff;--tint:#2a1519;--star:#f5b942;--code-kw:#ff8b93;--code-str:#f2c14e;--danger:#ff8a90;--scrim:rgba(0,0,0,.6);--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--fg);font:400 1.0625rem/1.65 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
 .wrap{max-width:820px;margin:0 auto;padding:0 24px}
 a{color:inherit}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--line);z-index:5}
-header .wrap{display:flex;justify-content:space-between;align-items:center;height:56px}
-header strong{font-weight:800}
-nav{display:flex;gap:20px}
-nav a{text-decoration:none;color:var(--muted)}
-nav a:hover{color:var(--fg)}
+.bar{max-width:1120px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px}
+.brand{padding:6px 4px;font-size:1.6rem;font-weight:800;letter-spacing:-.05em;line-height:1;text-decoration:none;color:var(--fg);border-radius:8px}
+.brand-dot{color:var(--accent)}
+.nav-links{display:flex;gap:2px;margin-right:auto}
+.nav-links a{padding:10px 12px;font-weight:500;line-height:1;text-decoration:none;color:var(--muted);border-radius:8px}
+.nav-links a:hover{color:var(--fg);background:var(--panel)}
+.bar-actions{display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;font:600 .95rem/1 "Bricolage Grotesque",system-ui,sans-serif;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);text-decoration:none;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+.btn:hover{background:var(--panel);border-color:var(--muted)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn svg.filled{fill:currentColor;stroke:none}
+.btn-icon{padding:0;width:44px}
+.btn-primary{color:var(--on-btn);background:var(--btn);border-color:var(--btn)}
+.btn-primary:hover{color:var(--on-btn);background:var(--btn-hover);border-color:var(--btn-hover)}
+.btn-lg{min-height:48px;padding:0 22px;font-size:1rem}
+.search-btn{width:44px;padding:0;font-weight:500;color:var(--muted)}
+.search-btn .label,.search-btn kbd{display:none}
+.kbd,.search-btn kbd,.palette-field kbd{padding:3px 6px;font:500 .75rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.touch-short{display:none}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.palette{position:fixed;inset:0;z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px}
+.palette-backdrop{position:absolute;inset:0;background:var(--scrim)}
+.palette-box{position:relative;display:flex;flex-direction:column;width:min(560px,100%);max-height:min(70vh,560px);overflow:hidden;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.palette-field{display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--line)}
+.palette-field:focus-within{box-shadow:inset 0 -2px 0 var(--accent)}
+.palette-field svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.palette-field input{flex:1;min-width:0;min-height:56px;font:400 1.05rem "Bricolage Grotesque",system-ui,sans-serif;color:var(--fg);background:transparent;border:0;outline:0}
+.palette-list{margin:0;padding:8px;overflow-y:auto;list-style:none}
+.palette-list li{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer}
+.palette-list li[aria-selected="true"]{background:var(--tint)}
+.opt-title{font-weight:600;overflow-wrap:anywhere}
+.opt-kind{flex:none;font:400 .8rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.palette-empty{margin:0;padding:20px 16px;max-width:none;color:var(--muted)}
+html.palette-open{overflow:hidden}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px}
+.footer-links{display:flex;flex-wrap:wrap;gap:8px 20px}
+.footer-links a{color:var(--muted);text-underline-offset:3px}
+.footer-links a:hover{color:var(--fg)}
+@media (min-width:1100px){.search-btn{width:auto;padding:0 12px 0 14px;gap:10px}.search-btn .label,.search-btn kbd{display:inline}}
+@media (max-width:1099px){.bar-actions .social{display:none}}
+@media (max-width:759px){html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 116px)}.nav-links{order:3;width:100%;margin-right:0;overflow-x:auto}.bar-actions{margin-left:auto}.bar-actions .cv-btn{display:none}}
+@media (max-width:519px){.touch-long{display:none}.touch-short{display:inline}}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
 .hero{padding:64px 0 56px}
-pre{margin:0;padding:22px 24px;background:var(--panel);border-radius:6px;overflow-x:auto;font:400 .95rem/1.7 "IBM Plex Mono",ui-monospace,Menlo,monospace;color:var(--fg)}
+pre{margin:0;padding:22px 24px;background:var(--panel);border-radius:var(--radius);overflow-x:auto;font:400 .95rem/1.7 "IBM Plex Mono",ui-monospace,Menlo,monospace;color:var(--fg)}
 .k{color:var(--code-kw)}.s{color:var(--code-str)}.c{color:var(--muted)}
 .run{margin:28px 0 0;font:400 .95rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 h1{margin:6px 0 0;font-size:clamp(2.8rem,10vw,5.6rem);line-height:1;font-weight:800;letter-spacing:-.03em}
@@ -39,10 +84,10 @@ p{margin:0 0 14px;max-width:60ch}
 .lang:last-child{border-bottom:0}
 .lang b{font-size:1.5rem;font-weight:800}
 .lang span{color:var(--muted)}
-.empty{padding:28px 24px;border:2px dashed var(--line);border-radius:6px}
+.empty{padding:28px 24px;border:2px dashed var(--line);border-radius:var(--radius)}
 .empty code{display:block;margin-bottom:10px;font:400 .95rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .empty p{margin:0}
-.project{padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.project{padding:24px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
 .project h3{margin:0 0 4px;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
 .project .tags{margin:0 0 14px;font:400 .9rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .project pre{margin-top:18px;padding:16px 18px;background:var(--bg);border:1px solid var(--line);font-size:.88rem}
@@ -50,13 +95,15 @@ p{margin:0 0 14px;max-width:60ch}
 .project p code{font:400 .9em "IBM Plex Mono",ui-monospace,Menlo,monospace}
 .converter{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 16px;margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
 .converter label{display:flex;flex-direction:column;gap:6px;font:500 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
-.demo input[type="text"],.demo input[type="number"],.demo select,.demo textarea{width:100%;min-height:44px;padding:8px 12px;font:400 1rem "Bricolage Grotesque",system-ui,sans-serif;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px}
-.demo button{min-height:44px;padding:0 22px;font:600 1rem "Bricolage Grotesque",system-ui,sans-serif;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;cursor:pointer}
-.demo button[type="submit"]{color:var(--bg);background:var(--accent);border-color:var(--accent)}
+.demo input[type="text"],.demo input[type="number"],.demo select,.demo textarea{width:100%;min-height:44px;padding:8px 12px;font:400 1rem "Bricolage Grotesque",system-ui,sans-serif;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:var(--radius)}
+.demo button{min-height:44px;padding:0 22px;font:600 1rem "Bricolage Grotesque",system-ui,sans-serif;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer}
+.demo button:hover{background:var(--panel)}
+.demo button[type="submit"]{color:var(--on-btn);background:var(--btn);border-color:var(--btn)}
+.demo button[type="submit"]:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
 .demo input:focus-visible,.demo select:focus-visible,.demo textarea:focus-visible,.demo button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .conv-actions{grid-column:1/-1;display:flex;gap:12px}
 .conv-result{grid-column:1/-1;margin:2px 0 0;max-width:none;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
-.conv-result.error{color:var(--code-str);font-size:1rem;font-weight:600}
+.conv-result.error{color:var(--danger);font-size:1rem;font-weight:600}
 .conv-note{grid-column:1/-1;margin:0;max-width:none;font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .field{display:flex;flex-direction:column;gap:6px;font:500 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .demo textarea{resize:vertical}
@@ -66,7 +113,7 @@ p{margin:0 0 14px;max-width:60ch}
 .demo-grid + .demo-grid{margin-top:14px}
 .btn-row{display:flex;flex-wrap:wrap;gap:12px}
 .demo-msg{margin:14px 0 0;max-width:none;font-weight:600}
-.demo-msg.error{color:var(--code-str)}
+.demo-msg.error{color:var(--danger)}
 .table-wrap{margin-top:16px;overflow-x:auto}
 .result-table{width:100%;border-collapse:collapse;font-size:.95rem}
 .result-table th,.result-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)}
@@ -85,32 +132,32 @@ p{margin:0 0 14px;max-width:60ch}
 .rate-form legend{padding:0;margin-bottom:6px;font:500 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .rate-form .demo-msg{margin:0}
 .star-row{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:2px}
-.star-row label{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;font-size:2rem;line-height:1;color:var(--accent);cursor:pointer}
-.star-row input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.star-row label{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;font-size:2rem;line-height:1;color:var(--star);cursor:pointer}
+.star-row input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--radius)}
 .star-text{margin-left:10px;font:400 .9rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 [hidden]{display:none!important}
 .ratings{margin-top:48px;max-width:640px}
 .ratings h3{margin:0 0 16px;font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
-.rating-summary{display:grid;grid-template-columns:auto 1fr;gap:16px 32px;align-items:center;padding:20px 24px;background:var(--panel);border-radius:6px}
+.rating-summary{display:grid;grid-template-columns:auto 1fr;gap:16px 32px;align-items:center;padding:20px 24px;background:var(--panel);border-radius:var(--radius)}
 .avg{display:flex;flex-direction:column;gap:4px}
 .avg-num{font-size:3rem;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.avg-stars{font-size:1.25rem;color:var(--accent);letter-spacing:.1em}
+.avg-stars{font-size:1.25rem;color:var(--star);letter-spacing:.1em}
 .avg-count{font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .breakdown{display:grid;gap:6px;min-width:0}
 .bar-row{display:grid;grid-template-columns:2.4rem minmax(0,1fr) 2rem;gap:10px;align-items:center;font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .bar-track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;background:var(--accent)}
+.bar-fill{height:100%;background:var(--star)}
 .bar-count{text-align:right;font-variant-numeric:tabular-nums}
 .reviews{list-style:none;margin:20px 0 0;padding:0}
 .review{padding:16px 0;border-bottom:1px solid var(--line)}
 .review:last-child{border-bottom:0}
 .review-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
 .review-name{font-weight:800;overflow-wrap:anywhere}
-.review-stars{color:var(--accent);letter-spacing:.08em}
+.review-stars{color:var(--star);letter-spacing:.08em}
 .review-date{margin-left:auto;font:400 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .review-text{margin:6px 0 0;max-width:60ch;white-space:pre-wrap;overflow-wrap:anywhere}
-.ratings-empty{margin:0;padding:24px;max-width:none;border:2px dashed var(--line);border-radius:6px}
+.ratings-empty{margin:0;padding:24px;max-width:none;border:2px dashed var(--line);border-radius:var(--radius)}
 .ratings-note,.ratings-more{margin:16px 0 0;max-width:none;font:400 .9rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.95rem}
 @media (max-width:560px){.lang{grid-template-columns:1fr;gap:0}.converter{grid-template-columns:1fr}.demo-grid{grid-template-columns:1fr}.hang-layout{grid-template-columns:1fr}.rating-summary{grid-template-columns:1fr}}
@@ -166,13 +213,91 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
     transition: none;
   }
 }
+
+/* Project gallery + zoomed project viewer */
+.project-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.project-card{display:flex;flex-direction:column;align-items:flex-start;min-width:0;min-height:150px;padding:18px;text-align:left;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.project-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:var(--shadow)}
+.project-card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.project-card .project-card-index{font:500 .75rem "IBM Plex Mono",ui-monospace,monospace;color:var(--accent);margin-bottom:16px}
+.project-card strong{font-size:1.12rem;line-height:1.25;font-weight:800;overflow-wrap:anywhere}
+.project-card .project-card-tags{margin-top:8px;font:400 .78rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.project-card .project-card-open{margin-top:auto;padding-top:18px;font-size:.85rem;color:var(--muted)}
+.project-viewer{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--scrim)}
+.project-viewer[hidden]{display:none!important}
+.project-viewer-panel{position:relative;width:min(920px,100%);max-height:min(88vh,900px);overflow:auto;padding:clamp(18px,3vw,32px);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);animation:projectZoomIn .2s ease-out}
+.project-viewer-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.project-viewer-label{font:500 .8rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.project-viewer-close{flex:none;min-width:44px;min-height:44px;padding:0 14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);font:600 .95rem "Bricolage Grotesque",system-ui,sans-serif;cursor:pointer}
+.project-viewer-close:hover{border-color:var(--accent)}
+.project-viewer-content>.project{margin:0!important;padding:0;border:0;background:transparent}
+.project-viewer-content>.project h3{font-size:clamp(1.6rem,4vw,2.1rem)}
+.project-viewer-content>.project>p:not(.tags){max-width:70ch}
+.project-viewer-content>.project pre{max-width:100%}
+body.project-viewer-open{overflow:hidden}
+@keyframes projectZoomIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@media(max-width:650px){.project-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.project-card{min-height:140px;padding:14px}.project-viewer{padding:10px}.project-viewer-panel{max-height:92vh;padding:18px}.project-viewer-content .demo-grid{grid-template-columns:1fr}}
+@media(max-width:380px){.project-gallery{grid-template-columns:1fr}.project-card{min-height:120px}}
+@media(prefers-reduced-motion:reduce){.project-card,.project-viewer-panel{transition:none;animation:none}}
+
+
+/* Contact section */
+.contact-intro{max-width:620px;color:var(--muted);margin:0 0 22px}
+.contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:900px}
+.contact-card{display:flex;align-items:center;gap:16px;padding:20px 22px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--text);text-decoration:none;transition:transform .18s ease,border-color .18s ease}
+.contact-card:hover,.contact-card:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none}
+.contact-icon{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border-radius:13px;background:var(--soft);color:var(--accent)}
+.contact-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.contact-copy{display:grid;gap:4px;min-width:0}
+.contact-copy strong{font-size:1rem}
+.contact-copy span{font-size:.88rem;color:var(--muted)}
+.contact-copy .contact-value{font:500 .88rem "IBM Plex Mono",ui-monospace,monospace;color:var(--text);overflow-wrap:anywhere}
+.contact-arrow{margin-left:auto;color:var(--muted);font-size:1.2rem}
+@media(max-width:560px){.contact-grid{grid-template-columns:1fr}.contact-card{padding:16px}}
+
 </style>
 </head>
-<body>
+<body id="top">
+<script>
+// Sends privacy-conscious portfolio events to the same-origin Vercel API.
+// The Discord webhook URL stays server-side in Vercel environment variables.
+window.portfolioLog = function (event, details) {
+  try {
+    if (!/^(page_view|project_open|contact_click|rating)$/.test(String(event || ""))) return;
+    return fetch("/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: event, details: String(details || "").slice(0, 180) }),
+      keepalive: true
+    }).catch(function () {});
+  } catch (error) {}
+};
+window.addEventListener("DOMContentLoaded", function () {
+  window.portfolioLog("page_view", location.pathname || "/");
+  document.querySelectorAll("[data-contact-method]").forEach(function (link) {
+    link.addEventListener("click", function () {
+      window.portfolioLog("contact_click", link.getAttribute("data-contact-method"));
+    });
+  });
+});
+</script>
     <div id="custom-cursor" aria-hidden="true"></div>
     
 
-<header><div class="wrap"><strong>Brahim Saadi</strong><nav><a href="#about">About</a><a href="#skills">Skills</a><a href="#projects">Projects</a></nav></div></header>
+<header>
+<div class="bar">
+<a class="brand" href="#top" aria-label="Brahim Saadi, back to the top">BS<span class="brand-dot">.</span></a>
+<nav class="nav-links" aria-label="Sections"><a href="#about">About</a><a href="#skills">Skills</a><a href="#projects">Projects</a><a href="#contact">Contact</a></nav>
+<div class="bar-actions">
+<button class="btn search-btn" id="search-open" type="button" aria-haspopup="dialog" aria-label="Quick search" aria-keyshortcuts="Control+K Meta+K"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span class="label">Quick Search</span><kbd id="search-kbd">Ctrl K</kbd></button>
+<button class="btn btn-icon" id="theme-toggle" type="button" aria-label="Switch to dark theme"><svg id="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg><svg id="icon-moon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+<a class="btn cv-btn" id="cv-link" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg><span>CV</span></a>
+<a class="btn btn-icon social" id="github-link" href="#" target="_blank" rel="noopener" aria-label="GitHub" hidden><svg class="filled" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+<a class="btn btn-icon social" id="linkedin-link" href="#" target="_blank" rel="noopener" aria-label="LinkedIn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></a>
+<a class="btn btn-primary" id="touch-link" href="#" hidden><span class="touch-long">Get in Touch</span><span class="touch-short">Contact</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+</div>
+</div>
+</header>
 <main class="wrap">
 <div class="hero">
 <pre><code><span class="k">int</span>	main(<span class="k">void</span>)
@@ -183,6 +308,12 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 <p class="run">$ ./portfolio</p>
 <h1>Brahim Saadi<span class="cursor" aria-hidden="true"></span></h1>
 <p class="role">Data analyst passionate about transforming data into insights and helping businesses make smarter, data-driven decisions.</p>
+<div class="hero-actions">
+<a class="btn btn-primary btn-lg" href="#projects">Explore Projects <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+<button class="btn btn-lg" id="copy-email" type="button" hidden><svg id="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg id="check-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M20 6 9 17l-5-5"/></svg><span id="copy-label">Copy Email</span></button>
+<a class="btn btn-lg" id="hero-cv" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>View Resume (CV)</a>
+<span class="sr" id="copy-status" role="status"></span>
+</div>
 </div>
 
 <section id="about">
@@ -201,6 +332,16 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 
 <section id="projects">
 <h2>Projects</h2>
+<div class="project-gallery" id="project-gallery" aria-label="Project demos"></div>
+<div class="project-viewer" id="project-viewer" hidden>
+  <div class="project-viewer-panel" role="dialog" aria-modal="true" aria-labelledby="project-viewer-label">
+    <div class="project-viewer-top">
+      <span class="project-viewer-label" id="project-viewer-label">PROJECT PREVIEW</span>
+      <button class="project-viewer-close" id="project-viewer-close" type="button" aria-label="Close project preview">Close ✕</button>
+    </div>
+    <div class="project-viewer-content" id="project-viewer-content"></div>
+  </div>
+</div>
 <div class="project">
 <h3>Currency Converter</h3>
 <p class="tags">Python &middot; tkinter</p>
@@ -290,6 +431,21 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 </div>
 </section>
 
+<section id="contact">
+<h2>Contact Me</h2>
+<p class="contact-intro">Feel free to reach out to me on Instagram or by email. I’ll try to get back to you as soon as possible.</p>
+<div class="contact-grid">
+  <a class="contact-card" href="https://www.instagram.com/brah.vm/" target="_blank" rel="noopener noreferrer" data-contact-method="instagram">
+    <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/></svg></span>
+    <span class="contact-copy"><strong>Instagram</strong><span>Follow me on Instagram</span><span class="contact-value">@brah.vm</span></span><span class="contact-arrow" aria-hidden="true">↗</span>
+  </a>
+  <a class="contact-card" href="mailto:ibrahimpourtravail@gmail.com" data-contact-method="email">
+    <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></svg></span>
+    <span class="contact-copy"><strong>Email</strong><span>Send me an email</span><span class="contact-value">ibrahimpourtravail@gmail.com</span></span><span class="contact-arrow" aria-hidden="true">↗</span>
+  </a>
+</div>
+</section>
+
 <section id="rate">
 <h2>Rate this portfolio</h2>
 <p>Thanks for visiting. Please tell me what you think: your name and a star rating are required, and feedback is optional.</p>
@@ -328,7 +484,20 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 </div>
 </section>
 </main>
-<footer><div class="wrap">&copy; 2026 Brahim Saadi</div></footer>
+<footer><div class="wrap"><span>&copy; 2026 Brahim Saadi</span><span class="footer-links"><a id="footer-github" href="#" target="_blank" rel="noopener" hidden>GitHub</a><a id="footer-linkedin" href="#" target="_blank" rel="noopener" hidden>LinkedIn</a><a id="footer-email" href="#" hidden>Email</a></span></div></footer>
+
+<div class="palette" id="palette" hidden>
+<div class="palette-backdrop" id="palette-backdrop"></div>
+<div class="palette-box" role="dialog" aria-modal="true" aria-label="Quick search">
+<div class="palette-field">
+<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+<input id="palette-input" type="text" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" aria-label="Search sections, projects and skills" placeholder="Search sections, projects and skills" autocomplete="off" spellcheck="false">
+<kbd>Esc</kbd>
+</div>
+<ul class="palette-list" id="palette-list" role="listbox" aria-label="Results"></ul>
+<p class="palette-empty" id="palette-empty" hidden>No results. Try another word.</p>
+</div>
+</div>
 <script>
 // Currency converter demo (JavaScript version of the Python app).
 // Each number means: how much of this currency equals 1 USD. Example rates only.
@@ -864,8 +1033,6 @@ const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6
   }
 
   // Sends the rating. Returns "sent", "saved" or "unavailable"; throws if sending fails.
-  
-  // Sends the rating and logs it to Discord.
   async function sendRating(data) {
     if (RATINGS_ENDPOINT) {
       const response = await fetch(RATINGS_ENDPOINT, {
@@ -873,26 +1040,11 @@ const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6
         headers: {"Content-Type": "text/plain;charset=utf-8"},
         body: JSON.stringify(data)
       });
-
-      if (!response.ok) {
-        throw new Error("The rating could not be sent.");
-      }
-
-      if (!RATINGS_FEED) saveLocal(data);
-
-      // Log the successful rating submission to Discord.
-      fetch("/api/log", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          event: "rating",
-          details: "A visitor submitted a rating."
-        })
-      }).catch(() => {});
-
+      if (!response.ok) throw new Error("The rating could not be sent.");
+      if (!RATINGS_FEED) saveLocal(data);   // so the visitor still sees it in the list below
+      if (window.portfolioLog) window.portfolioLog("rating", "A visitor submitted a rating.");
       return "sent";
     }
-
     return saveLocal(data) ? "saved" : "unavailable";
   }
 
@@ -1124,7 +1276,7 @@ const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6
     cursor.classList.toggle(
       "hovering",
       Boolean(target.closest(
-        "a, button, input, textarea, select, label"
+        "a, button, input, textarea, select, label, [role=\"option\"]"
       ))
     );
   });
@@ -1136,6 +1288,441 @@ const RATINGS_FEED = "https://script.google.com/macros/s/AKfycby2RbaWdXFNis9vJp6
   });
 })();
 </script>
+<script>
+// ===== Buttons: your links, theme switch, copy email and quick search =====
+// YOUR LINKS
+// Fill these in. Each button only shows up once its link is filled in, so visitors
+// never see a button that goes nowhere.
+const LINKS = {
+  email: "ibrahimpourtravail@gmail.com",      // contact email
+  github: "",     // for example "https://github.com/your-username"
+  linkedin: "",   // for example "https://www.linkedin.com/in/your-name"
+  cv: ""          // for example "Brahim-Saadi-CV.pdf" (save the file next to this page)
+};
+
+(function () {
+  const root = document.documentElement;
+  const byId = id => document.getElementById(id);
+  const lessMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // Shows or hides any element, including icons.
+  function setHidden(element, hidden) {
+    element.toggleAttribute("hidden", hidden);
+  }
+
+  // ---- 1. Your links ----
+
+  // Only normal web addresses are accepted for GitHub and LinkedIn.
+  function webAddress(value) {
+    const text = String(value || "").trim();
+    return /^https?:\/\//i.test(text) ? text : "";
+  }
+
+  // The CV can be a web address or a file next to the page. Other kinds of address
+  // (like "javascript:") are ignored.
+  function fileAddress(value) {
+    const text = String(value || "").trim();
+    if (/^https?:\/\//i.test(text)) return text;
+    return /^[a-z][a-z0-9+.-]*:/i.test(text) ? "" : text;
+  }
+
+  function emailAddress(value) {
+    const text = String(value || "").trim();
+    return /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(text) ? text : "";
+  }
+
+  const email = emailAddress(LINKS.email);
+  const github = webAddress(LINKS.github);
+  const linkedin = webAddress(LINKS.linkedin);
+  const cv = fileAddress(LINKS.cv);
+
+  // Turns a link on: sets its address and shows it. Does nothing without an address.
+  function enableLink(id, address) {
+    const element = byId(id);
+    if (!element || !address) return;
+    element.setAttribute("href", address);
+    setHidden(element, false);
+  }
+
+  enableLink("touch-link", email && "mailto:" + email);
+  enableLink("cv-link", cv);
+  enableLink("hero-cv", cv);
+  enableLink("github-link", github);
+  enableLink("linkedin-link", linkedin);
+  enableLink("footer-github", github);
+  enableLink("footer-linkedin", linkedin);
+  enableLink("footer-email", email && "mailto:" + email);
+  if (email) setHidden(byId("copy-email"), false);
+
+  // The search button shows the shortcut that fits the visitor's computer.
+  const isApple = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || "");
+  byId("search-kbd").textContent = isApple ? "⌘K" : "Ctrl K";
+
+  // ---- 2. Light and dark theme ----
+  const themeButton = byId("theme-toggle");
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+  // The theme in use: the visitor's choice, or else the computer's setting.
+  function currentTheme() {
+    const chosen = root.getAttribute("data-theme");
+    if (chosen === "dark" || chosen === "light") return chosen;
+    return darkQuery.matches ? "dark" : "light";
+  }
+
+  // Shows a sun in the light theme and a moon in the dark theme.
+  function showTheme() {
+    const theme = currentTheme();
+    setHidden(byId("icon-sun"), theme === "dark");
+    setHidden(byId("icon-moon"), theme === "light");
+    themeButton.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+  }
+
+  function setTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem("portfolio-theme", theme);
+    } catch (error) {
+      // the choice just will not be remembered
+    }
+    showTheme();
+  }
+
+  function toggleTheme() {
+    setTheme(currentTheme() === "dark" ? "light" : "dark");
+  }
+
+  themeButton.addEventListener("click", toggleTheme);
+  if (darkQuery.addEventListener) darkQuery.addEventListener("change", showTheme);
+  showTheme();
+
+  // ---- 3. Copy email ----
+  const copyButton = byId("copy-email");
+  const copyLabel = byId("copy-label");
+  let copyTimer = 0;
+
+  // Copies text to the clipboard. Returns true if it worked.
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      // try the older way below
+    }
+    try {
+      const box = document.createElement("textarea");
+      box.value = text;
+      box.setAttribute("readonly", "");
+      box.style.position = "fixed";
+      box.style.opacity = "0";
+      document.body.appendChild(box);
+      box.select();
+      const worked = document.execCommand("copy");
+      box.remove();
+      return worked;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async function copyEmail() {
+    if (!email) return;
+    const worked = await copyText(email);
+    // If copying is blocked, the button shows the address so it can be copied by hand.
+    copyLabel.textContent = worked ? "Email copied" : email;
+    setHidden(byId("copy-icon"), worked);
+    setHidden(byId("check-icon"), !worked);
+    byId("copy-status").textContent = worked
+      ? "Email address copied to the clipboard"
+      : "Copying was blocked. The address is shown on the button.";
+    window.clearTimeout(copyTimer);
+    copyTimer = window.setTimeout(function () {
+      copyLabel.textContent = "Copy Email";
+      setHidden(byId("copy-icon"), false);
+      setHidden(byId("check-icon"), true);
+      byId("copy-status").textContent = "";
+    }, worked ? 2200 : 5000);
+  }
+
+  copyButton.addEventListener("click", copyEmail);
+
+  // ---- 4. Quick search (Ctrl+K or Cmd+K) ----
+  const palette = byId("palette");
+  const input = byId("palette-input");
+  const list = byId("palette-list");
+  const emptyText = byId("palette-empty");
+  let allItems = [];        // everything that can be found
+  let shown = [];           // what matches the search right now
+  let active = 0;           // which result is highlighted
+  let returnFocusTo = null; // where the keyboard focus goes back to when the box closes
+
+  function scrollToElement(element) {
+    return function () {
+      element.scrollIntoView({behavior: lessMotion.matches ? "auto" : "smooth", block: "start"});
+    };
+  }
+
+  function openAddress(address) {
+    return function () { window.open(address, "_blank", "noopener"); };
+  }
+
+  // Collects what can be found from the page itself, so the list is never out of date.
+  function buildItems() {
+    const items = [];
+    document.querySelectorAll("main section[id]").forEach(function (section) {
+      const heading = section.querySelector("h2");
+      if (heading) items.push({title: heading.textContent.trim(), kind: "Section", extra: "", run: scrollToElement(section)});
+    });
+    document.querySelectorAll(".project").forEach(function (project) {
+      const heading = project.querySelector("h3");
+      const tags = project.querySelector(".tags");
+      if (heading) items.push({title: heading.textContent.trim(), kind: "Project", extra: tags ? tags.textContent : "", run: scrollToElement(project)});
+    });
+    document.querySelectorAll(".lang").forEach(function (skill) {
+      const name = skill.querySelector("b");
+      const text = skill.querySelector("span");
+      if (name) items.push({title: name.textContent.trim(), kind: "Skill", extra: text ? text.textContent : "", run: scrollToElement(skill)});
+    });
+    items.push({title: currentTheme() === "dark" ? "Switch to light theme" : "Switch to dark theme", kind: "Action", extra: "theme dark light mode", run: toggleTheme});
+    if (email) {
+      items.push({title: "Copy email address", kind: "Action", extra: "contact", run: copyEmail});
+      items.push({title: "Send an email", kind: "Action", extra: "contact get in touch", run: function () { window.location.href = "mailto:" + email; }});
+    }
+    if (github) items.push({title: "Open GitHub", kind: "Action", extra: "code", run: openAddress(github)});
+    if (linkedin) items.push({title: "Open LinkedIn", kind: "Action", extra: "profile", run: openAddress(linkedin)});
+    if (cv) items.push({title: "Open resume (CV)", kind: "Action", extra: "cv resume", run: openAddress(cv)});
+    return items;
+  }
+
+  // Every word typed has to appear somewhere in an item.
+  function search(query) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const matches = allItems.filter(function (item) {
+      const text = (item.title + " " + item.kind + " " + item.extra).toLowerCase();
+      return words.every(word => text.includes(word));
+    });
+    // Titles that start with what was typed come first. The rest keep the page order.
+    const first = words[0] || "";
+    const starts = matches.filter(item => first && item.title.toLowerCase().startsWith(first));
+    return starts.concat(matches.filter(item => !starts.includes(item)));
+  }
+
+  // Highlights one result.
+  function setActive(index, scroll) {
+    const rows = list.children;
+    if (rows[active]) rows[active].setAttribute("aria-selected", "false");
+    active = index;
+    if (rows[active]) {
+      rows[active].setAttribute("aria-selected", "true");
+      if (scroll) rows[active].scrollIntoView({block: "nearest"});
+    }
+    input.setAttribute("aria-activedescendant", rows[active] ? rows[active].id : "");
+  }
+
+  function isOpen() {
+    return !palette.hasAttribute("hidden");
+  }
+
+  function closePalette() {
+    if (!isOpen()) return;
+    setHidden(palette, true);
+    root.classList.remove("palette-open");
+    input.blur();   // the box is hidden now, so the search field must let go of the focus
+    if (returnFocusTo && returnFocusTo !== document.body && returnFocusTo.focus) returnFocusTo.focus({preventScroll: true});
+  }
+
+  function choose(index) {
+    const item = shown[index];
+    if (!item) return;
+    closePalette();
+    item.run();
+  }
+
+  // Redraws the results for whatever is typed.
+  function render() {
+    shown = search(input.value);
+    list.textContent = "";
+    shown.forEach(function (item, index) {
+      const row = document.createElement("li");
+      row.id = "palette-option-" + index;
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", "false");
+      const title = document.createElement("span");
+      title.className = "opt-title";
+      title.textContent = item.title;
+      const kind = document.createElement("span");
+      kind.className = "opt-kind";
+      kind.textContent = item.kind;
+      row.appendChild(title);
+      row.appendChild(kind);
+      row.addEventListener("mousemove", function () { if (active !== index) setActive(index, false); });
+      row.addEventListener("click", function () { choose(index); });
+      list.appendChild(row);
+    });
+    active = 0;
+    setActive(0, false);
+    setHidden(emptyText, shown.length > 0);
+  }
+
+  function openPalette() {
+    if (isOpen()) return;
+    returnFocusTo = document.activeElement;
+    allItems = buildItems();
+    input.value = "";
+    setHidden(palette, false);
+    root.classList.add("palette-open");
+    render();
+    input.focus();
+  }
+
+  input.addEventListener("input", render);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (shown.length) setActive((active + 1) % shown.length, true);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      if (shown.length) setActive((active - 1 + shown.length) % shown.length, true);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      choose(active);
+    } else if (event.key === "Tab") {
+      event.preventDefault();   // the box has nothing else to tab to, so keep the focus inside it
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    const key = String(event.key).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && key === "k") {
+      event.preventDefault();
+      if (isOpen()) closePalette();
+      else openPalette();
+    } else if (key === "escape" && isOpen()) {
+      event.preventDefault();
+      closePalette();
+    }
+  });
+
+  byId("palette-backdrop").addEventListener("click", closePalette);
+  byId("search-open").addEventListener("click", openPalette);
+})();
+</script>
+
+<script>
+/* ===== Project cards and zoom viewer =====
+   Existing project elements are moved, not cloned, so their live demos keep working. */
+(function () {
+  const section = document.getElementById("projects");
+  const gallery = document.getElementById("project-gallery");
+  const viewer = document.getElementById("project-viewer");
+  const viewerContent = document.getElementById("project-viewer-content");
+  const closeButton = document.getElementById("project-viewer-close");
+  const viewerLabel = document.getElementById("project-viewer-label");
+  if (!section || !gallery || !viewer || !viewerContent || !closeButton) return;
+
+  const projects = Array.from(section.querySelectorAll(":scope > .project"));
+  if (!projects.length) return;
+
+  // Keep the real demo elements in a hidden storage area until a card is opened.
+  // This removes the old expanded project list from the page while preserving all IDs and handlers.
+  const storage = document.createElement("div");
+  storage.id = "project-demo-storage";
+  storage.hidden = true;
+  section.appendChild(storage);
+
+  const entries = projects.map(function (project, index) {
+    const title = project.querySelector("h3");
+    const tags = project.querySelector(".tags");
+    const titleText = title ? title.textContent.trim() : "Project " + (index + 1);
+    const tagsText = tags ? tags.textContent.trim() : "Demo";
+    const placeholder = document.createComment("Project location: " + titleText);
+    project.parentNode.insertBefore(placeholder, project);
+    storage.appendChild(project);
+
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "project-card";
+    card.setAttribute("aria-haspopup", "dialog");
+    card.setAttribute("aria-label", "Open " + titleText + " project demo");
+
+    const number = document.createElement("span");
+    number.className = "project-card-index";
+    number.textContent = String(index + 1).padStart(2, "0") + " / " + String(projects.length).padStart(2, "0");
+    const heading = document.createElement("strong");
+    heading.textContent = titleText;
+    const tagLine = document.createElement("span");
+    tagLine.className = "project-card-tags";
+    tagLine.textContent = tagsText;
+    const openHint = document.createElement("span");
+    openHint.className = "project-card-open";
+    openHint.textContent = "Click to explore ↗";
+
+    card.append(number, heading, tagLine, openHint);
+    gallery.appendChild(card);
+
+    return { project: project, placeholder: placeholder, card: card, title: titleText };
+  });
+
+  let activeEntry = null;
+  let previousFocus = null;
+
+  function openProject(entry) {
+    if (activeEntry) closeProject();
+    activeEntry = entry;
+    previousFocus = document.activeElement;
+    viewerLabel.textContent = entry.title.toUpperCase();
+    viewerContent.appendChild(entry.project);
+    viewer.hidden = false;
+    document.body.classList.add("project-viewer-open");
+    closeButton.focus();
+  }
+
+  function closeProject() {
+    if (!activeEntry) {
+      viewer.hidden = true;
+      document.body.classList.remove("project-viewer-open");
+      return;
+    }
+    storage.appendChild(activeEntry.project);
+    activeEntry = null;
+    viewer.hidden = true;
+    document.body.classList.remove("project-viewer-open");
+    if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+    previousFocus = null;
+  }
+
+  entries.forEach(function (entry) {
+    entry.card.addEventListener("click", function () {
+      openProject(entry);
+      if (window.portfolioLog) window.portfolioLog("project_open", entry.title);
+    });
+  });
+  closeButton.addEventListener("click", closeProject);
+  viewer.addEventListener("click", function (event) {
+    if (event.target === viewer) closeProject();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (viewer.hidden) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeProject();
+    }
+    if (event.key === "Tab") {
+      const focusable = Array.from(viewer.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+        .filter(function (el) { return !el.hidden && el.getClientRects().length; });
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
-
