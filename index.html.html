@@ -80,7 +80,7 @@ h1{margin:6px 0 0;font-size:clamp(2.8rem,10vw,5.6rem);line-height:1;font-weight:
 section{padding:48px 0;border-top:1px solid var(--line)}
 h2{margin:0 0 20px;font-size:1.9rem;font-weight:800;letter-spacing:-.02em}
 p{margin:0 0 14px;max-width:60ch}
-.lang{display:grid;grid-template-columns:130px 1fr;gap:8px 24px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
+.lang{display:grid;grid-template-columns:170px 1fr;gap:8px 24px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
 .lang:last-child{border-bottom:0}
 .lang b{font-size:1.5rem;font-weight:800}
 .lang span{color:var(--muted)}
@@ -255,6 +255,15 @@ body.project-viewer-open{overflow:hidden}
 .contact-arrow{margin-left:auto;color:var(--muted);font-size:1.2rem}
 @media(max-width:560px){.contact-grid{grid-template-columns:1fr}.contact-card{padding:16px}}
 
+
+/* Availability tags at the very top of the page */
+.availability{--ok:#0f6b37;--ok-bg:#e2f5ea;--ok-line:#8fd3a9;background:var(--panel);border-bottom:1px solid var(--line)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .availability{--ok:#5ee79a;--ok-bg:#0f2a1b;--ok-line:#1f5a3a}}
+:root[data-theme="dark"] .availability{--ok:#5ee79a;--ok-bg:#0f2a1b;--ok-line:#1f5a3a}
+.availability-inner{max-width:1120px;margin:0 auto;padding:8px 24px;display:flex;flex-wrap:wrap;gap:8px 10px}
+.status{display:inline-flex;align-items:center;gap:8px;padding:4px 14px 4px 12px;font:600 .85rem/1.4 "Bricolage Grotesque",system-ui,sans-serif;border:1px solid;border-radius:999px}
+.status-dot{flex:none;width:8px;height:8px;border-radius:50%;background:currentColor}
+.status.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-line)}
 </style>
 </head>
 <body id="top">
@@ -284,6 +293,12 @@ window.addEventListener("DOMContentLoaded", function () {
     <div id="custom-cursor" aria-hidden="true"></div>
     
 
+<div class="availability" role="group" aria-label="Availability">
+<div class="availability-inner">
+<span class="status ok"><span class="status-dot" aria-hidden="true"></span>Available</span>
+</div>
+</div>
+
 <header>
 <div class="bar">
 <a class="brand" href="#top" aria-label="Brahim Saadi, back to the top">BS<span class="brand-dot">.</span></a>
@@ -307,7 +322,7 @@ window.addEventListener("DOMContentLoaded", function () {
 }</code></pre>
 <p class="run">$ ./portfolio</p>
 <h1>Brahim Saadi<span class="cursor" aria-hidden="true"></span></h1>
-<p class="role">Data analyst and web developer focused on turning data into insights and building clean, functional websites.</p>
+<p class="role">Data analyst passionate about transforming data into insights and helping businesses make smarter, data-driven decisions.</p>
 <div class="hero-actions">
 <a class="btn btn-primary btn-lg" href="#projects">Explore Projects <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
 <button class="btn btn-lg" id="copy-email" type="button" hidden><svg id="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg id="check-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M20 6 9 17l-5-5"/></svg><span id="copy-label">Copy Email</span></button>
@@ -318,8 +333,8 @@ window.addEventListener("DOMContentLoaded", function () {
 
 <section id="about">
 <h2>About</h2>
-<p>I'm a data analyst and web developer passionate about turning data into insights and building clean, functional websites.</p>
-<p>I enjoy solving problems, creating web experiences, and continuously learning new technologies.</p>
+<p>I’m a data analyst passionate about turning raw data into meaningful insights. I enjoy analyzing trends, identifying patterns, and using data to solve problems and support better decision-making.</p>
+<p>I’m always eager to learn new tools, improve my analytical skills, and take on new challenges.</p>
 </section>
 
 <section id="skills">
@@ -328,10 +343,12 @@ window.addEventListener("DOMContentLoaded", function () {
 <div class="lang"><b>C++</b><span>Object-oriented design, built on a solid C foundation.</span></div>
 <div class="lang"><b>Python</b><span>Scripting, automation, and quick problem solving.</span></div>
 <div class="lang"><b>SQL</b><span>Querying and structuring data in relational databases.</span></div>
-<div class="lang"><b>HTML</b><span>Building The Structure And Contect Of Web Pages</span></div>
-<div class="lang"><b>CSS</b><span>Styling Pages With Clean, Responsive Layouts</span></div>
-<div class="lang"><b>JavaScript</b><span>Plain JS That Powers The Live Demos In My Projects</span></div>
-<div class="lang" style="display:flex; flex-direction:column; gap:12px;"><b>phpMyAdmin</b><span>Managing databases, records, and user accounts.</span></div><section id="projects">
+<div class="lang"><b>HTML</b><span>Building the structure and content of web pages.</span></div>
+<div class="lang"><b>CSS</b><span>Styling pages with clean, responsive layouts.</span></div>
+<div class="lang"><b>JavaScript</b><span>Plain JS that powers the live demos in my projects.</span></div>
+</section>
+
+<section id="projects">
 <h2>Projects</h2>
 <div class="project-gallery" id="project-gallery" aria-label="Project demos"></div>
 <div class="project-viewer" id="project-viewer" hidden>
@@ -1466,6 +1483,18 @@ const LINKS = {
     return function () { window.open(address, "_blank", "noopener"); };
   }
 
+  // Projects sit behind cards, so choosing one opens its card.
+  function showProject(project, title) {
+    return function () {
+      const card = Array.from(document.querySelectorAll(".project-card")).find(function (c) {
+        const name = c.querySelector("strong");
+        return name && name.textContent.trim() === title;
+      });
+      if (card) card.click();
+      else scrollToElement(project)();
+    };
+  }
+
   // Collects what can be found from the page itself, so the list is never out of date.
   function buildItems() {
     const items = [];
@@ -1476,7 +1505,7 @@ const LINKS = {
     document.querySelectorAll(".project").forEach(function (project) {
       const heading = project.querySelector("h3");
       const tags = project.querySelector(".tags");
-      if (heading) items.push({title: heading.textContent.trim(), kind: "Project", extra: tags ? tags.textContent : "", run: scrollToElement(project)});
+      if (heading) items.push({title: heading.textContent.trim(), kind: "Project", extra: tags ? tags.textContent : "", run: showProject(project, heading.textContent.trim())});
     });
     document.querySelectorAll(".lang").forEach(function (skill) {
       const name = skill.querySelector("b");
@@ -1594,6 +1623,7 @@ const LINKS = {
   document.addEventListener("keydown", function (event) {
     const key = String(event.key).toLowerCase();
     if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && key === "k") {
+      if (document.body.classList.contains("project-viewer-open")) return;   // a project is open on top
       event.preventDefault();
       if (isOpen()) closePalette();
       else openPalette();
