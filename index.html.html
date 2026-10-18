@@ -225,7 +225,7 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 .project-card .project-card-open{margin-top:auto;padding-top:18px;font-size:.85rem;color:var(--muted)}
 .project-viewer{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--scrim)}
 .project-viewer[hidden]{display:none!important}
-.project-viewer-panel{position:relative;width:min(920px,100%);max-height:min(88vh,900px);overflow:auto;padding:clamp(18px,3vw,32px);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);animation:projectZoomIn .2s ease-out}
+.project-viewer-panel{position:relative;width:min(920px,100%);max-height:min(88vh,900px);overflow:auto;padding:clamp(18px,3vw,32px);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);animation:projectPop .5s cubic-bezier(.2,1.25,.35,1)}
 .project-viewer-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .project-viewer-label{font:500 .8rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
 .project-viewer-close{flex:none;min-width:44px;min-height:44px;padding:0 14px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);font:600 .95rem "Bricolage Grotesque",system-ui,sans-serif;cursor:pointer}
@@ -235,7 +235,8 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);f
 .project-viewer-content>.project>p:not(.tags){max-width:70ch}
 .project-viewer-content>.project pre{max-width:100%}
 body.project-viewer-open{overflow:hidden}
-@keyframes projectZoomIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes projectPop{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:none}}
+@keyframes viewerFade{from{opacity:0}to{opacity:1}}
 @media(max-width:650px){.project-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.project-card{min-height:140px;padding:14px}.project-viewer{padding:10px}.project-viewer-panel{max-height:92vh;padding:18px}.project-viewer-content .demo-grid{grid-template-columns:1fr}}
 @media(max-width:380px){.project-gallery{grid-template-columns:1fr}.project-card{min-height:120px}}
 @media(prefers-reduced-motion:reduce){.project-card,.project-viewer-panel{transition:none;animation:none}}
@@ -264,6 +265,20 @@ body.project-viewer-open{overflow:hidden}
 .status{display:inline-flex;align-items:center;gap:8px;padding:4px 14px 4px 12px;font:600 .85rem/1.4 "Bricolage Grotesque",system-ui,sans-serif;border:1px solid;border-radius:999px}
 .status-dot{flex:none;width:8px;height:8px;border-radius:50%;background:currentColor}
 .status.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-line)}
+
+/* Scroll effects and project pop-up */
+.project-viewer{animation:viewerFade .3s ease-out;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.project-card:active{transform:scale(.97)}
+.scroll-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:60;pointer-events:none}
+.scroll-progress span{display:block;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left}
+header{transition:box-shadow .25s ease}
+header.stuck{box-shadow:0 6px 18px -10px rgba(22,24,29,.35)}
+.nav-links a[aria-current]{color:var(--fg);text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:8px}
+.reveal-on .reveal:not(.in){opacity:0}
+.reveal-on .reveal.in{animation:revealUp .7s cubic-bezier(.22,.8,.3,1) var(--d,0ms) backwards}
+@keyframes revealUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.project-viewer{animation:none}.project-card:active{transform:none}header{transition:none}.reveal-on .reveal{opacity:1!important;animation:none!important}}
+@media print{.scroll-progress{display:none}.reveal-on .reveal{opacity:1!important;animation:none!important}}
 </style>
 </head>
 <body id="top">
@@ -322,7 +337,7 @@ window.addEventListener("DOMContentLoaded", function () {
 }</code></pre>
 <p class="run">$ ./portfolio</p>
 <h1>Brahim Saadi<span class="cursor" aria-hidden="true"></span></h1>
-<p class="role">Data analyst and web developer focused on turning data into insights and building clean, functional websites.</p>
+<p class="role">Data analyst passionate about transforming data into insights and helping businesses make smarter, data-driven decisions.</p>
 <div class="hero-actions">
 <a class="btn btn-primary btn-lg" href="#projects">Explore Projects <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
 <button class="btn btn-lg" id="copy-email" type="button" hidden><svg id="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg id="check-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M20 6 9 17l-5-5"/></svg><span id="copy-label">Copy Email</span></button>
@@ -333,9 +348,8 @@ window.addEventListener("DOMContentLoaded", function () {
 
 <section id="about">
 <h2>About</h2>
-<p>I'm a data analyst and web developer passionate about turning data into insights and building clean, functional websites.</p>
-<p>I enjoy solving problems, creating web experiences, and continuously learning new technologies.</p>
-</section>
+<p>I’m a data analyst passionate about turning raw data into meaningful insights. I enjoy analyzing trends, identifying patterns, and using data to solve problems and support better decision-making.</p>
+<p>I’m always eager to learn new tools, improve my analytical skills, and take on new challenges.</p>
 </section>
 
 <section id="skills">
@@ -347,7 +361,6 @@ window.addEventListener("DOMContentLoaded", function () {
 <div class="lang"><b>HTML</b><span>Building the structure and content of web pages.</span></div>
 <div class="lang"><b>CSS</b><span>Styling pages with clean, responsive layouts.</span></div>
 <div class="lang"><b>JavaScript</b><span>Plain JS that powers the live demos in my projects.</span></div>
-<div class="lang" style="display:flex; flex-direction:column; gap:12px;"><b>phpMyAdmin</b><span>Managing databases, records, and user accounts.</span></div>
 </section>
 
 <section id="projects">
@@ -1754,6 +1767,109 @@ const LINKS = {
       }
     }
   });
+})();
+</script>
+
+<script>
+/* ===== Scroll effects: progress bar, reveal on scroll, active menu link, header shadow ===== */
+(function () {
+  const root = document.documentElement;
+  const header = document.querySelector("header");
+  const lessMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // 1. A thin bar at the top that fills as you scroll down the page.
+  const bar = document.createElement("div");
+  bar.className = "scroll-progress";
+  bar.setAttribute("aria-hidden", "true");
+  const fill = document.createElement("span");
+  bar.appendChild(fill);
+  document.body.appendChild(bar);
+
+  let waiting = false;
+  function update() {
+    waiting = false;
+    const max = root.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
+    fill.style.transform = "scaleX(" + ratio + ")";
+    // The header gets a soft shadow once it is stuck to the top.
+    if (header) header.classList.toggle("stuck", window.scrollY > 0 && header.getBoundingClientRect().top <= 0);
+  }
+  function requestUpdate() {
+    if (!waiting) {
+      waiting = true;
+      window.requestAnimationFrame(update);
+    }
+  }
+  window.addEventListener("scroll", requestUpdate, {passive: true});
+  window.addEventListener("resize", requestUpdate);
+  update();
+
+  // 2. Things fade and slide up whenever they come into view, every time you scroll to them.
+  if ("IntersectionObserver" in window && !lessMotion) {
+    const groups = [".hero > *", "section > h2", "#about p", ".lang", ".project-card", ".contact-intro", ".contact-card", "#rate > p", ".rate-form", ".ratings"];
+    const targets = [];
+    groups.forEach(function (selector) {
+      document.querySelectorAll(selector).forEach(function (el) {
+        if (!targets.includes(el)) targets.push(el);
+      });
+    });
+    targets.forEach(function (el) { el.classList.add("reveal"); });
+    root.classList.add("reveal-on");
+
+    // Things play their effect every time they come into view, and get ready again when they leave.
+    const reveal = new IntersectionObserver(function (entries) {
+      let order = 0;   // things that appear together come in one after another
+      entries.forEach(function (entry) {
+        const el = entry.target;
+        const tall = entry.rootBounds && entry.intersectionRect.height > entry.rootBounds.height * 0.5;
+        if (entry.intersectionRatio >= 0.12 || (entry.isIntersecting && tall)) {
+          if (!el.classList.contains("in")) {
+            el.style.setProperty("--d", Math.min(order++ * 80, 400) + "ms");
+            el.classList.add("in");
+          }
+        } else if (!entry.isIntersecting) {
+          el.classList.remove("in");
+        }
+      });
+    }, {threshold: [0, 0.12], rootMargin: "0px 0px -6% 0px"});
+    targets.forEach(function (el) { reveal.observe(el); });
+  }
+
+  // 3. The menu link of the section you are reading gets underlined.
+  const links = Array.from(document.querySelectorAll(".nav-links a[href^='#']"));
+  const sections = new Map();
+  links.forEach(function (link) {
+    const section = document.querySelector(link.getAttribute("href"));
+    if (section && section.tagName === "SECTION") sections.set(section, link);
+  });
+  if ("IntersectionObserver" in window && sections.size) {
+    const spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        const link = sections.get(entry.target);
+        if (!link) return;
+        if (entry.isIntersecting) {
+          links.forEach(function (other) { other.removeAttribute("aria-current"); });
+          link.setAttribute("aria-current", "location");
+        } else if (link.hasAttribute("aria-current")) {
+          link.removeAttribute("aria-current");
+        }
+      });
+    }, {rootMargin: "-35% 0px -60% 0px"});
+    sections.forEach(function (link, section) { spy.observe(section); });
+  }
+
+  // 4. A project pops up from the card that was clicked.
+  const panel = document.querySelector(".project-viewer-panel");
+  if (panel) {
+    document.querySelectorAll(".project-card").forEach(function (card) {
+      card.addEventListener("click", function () {
+        const box = card.getBoundingClientRect();
+        const x = Math.min(Math.max(box.left + box.width / 2, 0), window.innerWidth);
+        const y = Math.min(Math.max(box.top + box.height / 2, 0), window.innerHeight);
+        panel.style.transformOrigin = (x - panel.offsetLeft) + "px " + (y - panel.offsetTop) + "px";
+      });
+    });
+  }
 })();
 </script>
 
