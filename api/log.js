@@ -1,275 +1,215 @@
+// Receives events from the portfolio and posts a clean summary card to a Discord webhook.
+// Needs the DISCORD_WEBHOOK_URL environment variable in Vercel.
 
 const rateLimits = new Map();
-const alertCooldowns = new Map();
-
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 15;
-const ALERT_COOLDOWN_MS = 60_000;
 const SITE_ORIGIN = "https://ibrahimsaadi.vercel.app";
 
+// How each event looks in Discord.
 const EVENTS = {
-  visit:         { icon: "👀", title: "New visitor", color: 0x3498db },
-  page_view:     { icon: "👀", title: "New visitor", color: 0x3498db },
-  project_open:  { icon: "🗂️", title: "Project opened", color: 0x9b59b6 },
-  contact_click: { icon: "✉️", title: "Contact click", color: 0xf1c40f },
-  cv_download:   { icon: "📄", title: "CV downloaded", color: 0x2ecc71 },
-  rating:        { icon: "⭐", title: "New rating", color: 0xe67e22 },
-  game:          { icon: "🎮", title: "Game played", color: 0x1abc9c },
-  submission:    { icon: "📝", title: "Form submitted", color: 0x95a5a6 },
-  security:      { icon: "🚨", title: "Security alert", color: 0xe74c3c }
+  visit:         { icon: "👀", title: "New visitor",     color: 0x3498db },
+  page_view:     { icon: "👀", title: "New visitor",     color: 0x3498db },
+  project_open:  { icon: "🗂️", title: "Project opened",  color: 0x9b59b6 },
+  contact_click: { icon: "✉️", title: "Contact click",   color: 0xf1c40f },
+  cv_download:   { icon: "📄", title: "CV downloaded",   color: 0x2ecc71 },
+  rating:        { icon: "⭐", title: "New rating",      color: 0xe67e22 },
+  game:          { icon: "🎮", title: "Game played",     color: 0x1abc9c },
+  submission:    { icon: "📝", title: "Form submitted",  color: 0x95a5a6 },
+  security:      { icon: "🚨", title: "Security alert",  color: 0xe74c3c }
 };
 
 const clip = (value, max = 200) =>
-  typeof value === "string"
-    ? value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max)
-    : "";
+  typeof value === "string" ? value.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max) : "";
 
+function flag(code) {
+  if (!/^[A-Za-z]{2}$/.test(code || "")) return "🌐";
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 127397 + c.charCodeAt(0)));
+}
+
+function countryName(code) {
+  try { return new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()); }
+  catch { return code; }
+}
+
+function safeDecode(value) {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+// Small user-agent reader: browser, system and device type.
 function readAgent(ua = "") {
-  const bot = /bot|crawler|spider|preview|headless/i.test(ua);
-  let browser = "Unknown";
+  const bot = /bot|crawler|spider|preview|facebookexternalhit|slurp|headless/i.test(ua);
+  let browser = "Unknown browser";
+  const pick = (re, name) => { const m = ua.match(re); if (m) { browser = `${name} ${m[1].split(".")[0]}`; return true; } return false; };
+  pick(/Edg(?:e|A|iOS)?\/([\d.]+)/, "Edge") || pick(/OPR\/([\d.]+)/, "Opera") ||
+  pick(/SamsungBrowser\/([\d.]+)/, "Samsung Internet") || pick(/(?:Firefox|FxiOS)\/([\d.]+)/, "Firefox") ||
+  pick(/(?:Chrome|CriOS)\/([\d.]+)/, "Chrome") || pick(/Version\/([\d.]+).*Safari/, "Safari");
 
-  const browsers = [
-    [/Edg(?:e|A|iOS)?\/([\d.]+)/, "Edge"],
-    [/OPR\/([\d.]+)/, "Opera"],
-    [/Firefox\/([\d.]+)/, "Firefox"],
-    [/(?:Chrome|CriOS)\/([\d.]+)/, "Chrome"],
-    [/Version\/([\d.]+).*Safari/, "Safari"]
-  ];
-
-  for (const [regex, name] of browsers) {
-    const match = ua.match(regex);
-    if (match) {
-      browser = `${name} ${match[1].split(".")[0]}`;
-      break;
-    }
-  }
-
-  let os = "Unknown";
-  if (/Windows NT/.test(ua)) os = "Windows";
-  else if (/Android/.test(ua)) os = "Android";
-  else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
+  let os = "Unknown system";
+  if (/Windows NT 10|Windows NT 11/.test(ua)) os = "Windows";
+  else if (/Windows/.test(ua)) os = "Windows (older)";
+  else if (/Android ([\d.]+)/.test(ua)) os = "Android " + ua.match(/Android ([\d.]+)/)[1].split(".")[0];
+  else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS" + (ua.match(/OS (\d+)_/) ? " " + ua.match(/OS (\d+)_/)[1] : "");
   else if (/Mac OS X/.test(ua)) os = "macOS";
   else if (/CrOS/.test(ua)) os = "ChromeOS";
   else if (/Linux/.test(ua)) os = "Linux";
 
-  const device = /iPad|Tablet/.test(ua)
-    ? "Tablet"
-    : /Mobi|iPhone|Android.*Mobile/.test(ua)
-      ? "Mobile"
-      : "Desktop";
-
+  const device = /iPad|Tablet/.test(ua) ? "Tablet" : /Mobi|iPhone|Android.*Mobile/.test(ua) ? "Mobile" : "Desktop";
   return { bot, browser, os, device };
 }
 
 function rabatTime() {
   return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Casablanca",
-    dateStyle: "medium",
-    timeStyle: "medium",
-    hour12: false
+    timeZone: "Africa/Casablanca", weekday: "short", day: "2-digit", month: "short",
+    hour: "2-digit", minute: "2-digit", hour12: false
   }).format(new Date());
 }
 
 function referrerLabel(ref) {
   if (!ref) return "Direct visit";
-  try {
-    const url = new URL(ref);
-    return clip(url.hostname + url.pathname, 150);
-  } catch {
-    return "Unavailable";
-  }
+  try { const u = new URL(ref); return u.hostname.replace(/^www\./, "") + (u.pathname !== "/" ? u.pathname : ""); }
+  catch { return clip(ref, 80); }
 }
 
-function getClientIp(req) {
-  // Prefer the platform-provided client IP when available.
-  const ip = req.headers["x-vercel-forwarded-for"];
-  if (typeof ip === "string" && ip.trim()) {
-    return clip(ip.split(",")[0].trim(), 64);
-  }
-
-  // This fallback is safe only when the deployment platform
-  // controls/sanitizes this header.
+function ipOf(req) {
   const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.trim()) {
-    return clip(forwarded.split(",")[0].trim(), 64);
-  }
-
-  return "unavailable";
+  return typeof forwarded === "string" ? forwarded.split(",")[0].trim() : "unavailable";
 }
 
-function getRoute(req) {
-  // Never trust a visitor-supplied route header.
-  return clip(req.url?.split("?")[0] || "/api/log", 120);
+function placeOf(h) {
+  const code = clip(h["x-vercel-ip-country"], 2);
+  const city = safeDecode(clip(h["x-vercel-ip-city"], 80));
+  const region = safeDecode(clip(h["x-vercel-ip-country-region"], 40));
+  return code
+    ? `${flag(code)} ${[city, region && region !== city && !/^[A-Z0-9]{1,3}$/.test(region) ? region : "", countryName(code)].filter(Boolean).join(", ")}`
+    : "🌐 Unknown";
 }
 
-async function sendDiscord(embed) {
+async function postToDiscord(embed) {
   const webhook = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhook) throw new Error("Logging not configured");
-
-  const response = await fetch(webhook, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: "Portfolio Security",
-      allowed_mentions: { parse: [] },
-      embeds: [embed]
-    })
-  });
-
-  if (!response.ok) throw new Error("Discord delivery failed");
+  if (!webhook) return false;
+  try {
+    const r = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "Portfolio Log", allowed_mentions: { parse: [] }, embeds: [embed] })
+    });
+    return r.ok;
+  } catch { return false; }
 }
 
-async function securityAlert(req, ip, reason, status) {
+// Fired by the server itself (not by anything a visitor's script sends) whenever the endpoint
+// sees something off: wrong origin, hammering the rate limit, a malformed request, and so on.
+const SECURITY_COOLDOWN_MS = 5 * 60_000; // at most one alert per IP every 5 minutes, so a flood of bad requests sends one card, not hundreds
+const securityAlerted = new Map();
+async function autoSecurityAlert(reason, req, extra) {
+  const ip = ipOf(req);
   const now = Date.now();
-  const key = `${ip}:${reason}`;
-  const previous = alertCooldowns.get(key);
-
-  // Avoid turning the webhook into a notification-flood target.
-  if (previous && now - previous < ALERT_COOLDOWN_MS) return;
-  alertCooldowns.set(key, now);
-
-  if (alertCooldowns.size > 1000) {
-    for (const [k, timestamp] of alertCooldowns) {
-      if (now - timestamp > ALERT_COOLDOWN_MS) {
-        alertCooldowns.delete(k);
-      }
-    }
+  const last = securityAlerted.get(ip);
+  if (last && now - last < SECURITY_COOLDOWN_MS) return;
+  securityAlerted.set(ip, now);
+  if (securityAlerted.size > 2000) {
+    for (const [key, time] of securityAlerted) if (now - time >= SECURITY_COOLDOWN_MS) securityAlerted.delete(key);
   }
-
-  const ua = clip(req.headers["user-agent"], 250);
-  const route = getRoute(req);
-
-  try {
-    await sendDiscord({
-      title: "🚨 Security event detected",
-      color: 0xe74c3c,
-      fields: [
-        { name: "Reason", value: clip(reason, 200), inline: false },
-        { name: "HTTP status", value: String(status), inline: true },
-        { name: "Method", value: clip(req.method, 12), inline: true },
-        { name: "Target route", value: route, inline: true },
-        { name: "Client IP", value: `\`${ip}\``, inline: true },
-        { name: "User agent", value: ua || "Unavailable", inline: false },
-        { name: "Time (Rabat)", value: rabatTime(), inline: false }
-      ],
-      timestamp: new Date().toISOString()
-    });
-  } catch {
-    // Logging failures must not break request handling.
-  }
+  const h = req.headers;
+  const agent = readAgent(clip(h["user-agent"], 400));
+  const fields = [
+    { name: "📍 Location", value: placeOf(h), inline: true },
+    { name: "🖥️ Device", value: `${agent.device}${agent.bot ? " (bot?)" : ""}\n${agent.os}\n${agent.browser}`, inline: true },
+    { name: "🌐 IP address", value: "`" + ip + "`", inline: true },
+    { name: "🔎 Origin header", value: "`" + clip(h.origin || "(none)", 100) + "`", inline: true },
+    { name: "🔗 Referer", value: clip(h.referer || "(none)", 150) || "(none)", inline: true },
+    { name: "🌍 Accept-Language", value: clip(h["accept-language"], 60) || "(none)", inline: true }
+  ];
+  if (extra) for (const [name, value] of Object.entries(extra)) fields.push({ name, value: clip(String(value), 300), inline: true });
+  await postToDiscord({
+    title: "🚨  Security alert",
+    description: `**${reason}**`,
+    color: EVENTS.security.color,
+    fields,
+    footer: { text: `Auto-detected · Rabat time · ${rabatTime()}` },
+    timestamp: new Date().toISOString()
+  });
 }
 
 export default async function handler(req, res) {
-  const ip = getClientIp(req);
-
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // Accept requests from your own website only.
   if (req.headers.origin !== SITE_ORIGIN) {
-    await securityAlert(req, ip, "Unexpected or missing Origin header", 403);
+    await autoSecurityAlert("Request from an unexpected origin", req, { "🙅 Expected origin": SITE_ORIGIN });
     return res.status(403).json({ error: "Forbidden origin" });
   }
 
+  const ip = ipOf(req);
+
+  // Best-effort per-instance rate limit.
   const now = Date.now();
-  let entry = rateLimits.get(ip);
-
-  if (!entry || now - entry.start >= WINDOW_MS) {
-    entry = { start: now, count: 0 };
-    rateLimits.set(ip, entry);
-  }
-
-  entry.count++;
-
-  if (entry.count > MAX_REQUESTS) {
-    await securityAlert(req, ip, "Rate limit exceeded: more than 15 requests/minute", 429);
+  const entry = rateLimits.get(ip);
+  if (entry && now - entry.start < WINDOW_MS && entry.count >= MAX_REQUESTS) {
+    await autoSecurityAlert("Rate limit exceeded (possible abuse)", req, { "📈 Requests": `${entry.count}+ in under a minute` });
     return res.status(429).json({ error: "Too many requests" });
   }
-
+  if (!entry || now - entry.start >= WINDOW_MS) rateLimits.set(ip, { start: now, count: 1 });
+  else entry.count++;
   if (rateLimits.size > 1000) {
-    for (const [key, value] of rateLimits) {
-      if (now - value.start >= WINDOW_MS) rateLimits.delete(key);
-    }
+    for (const [key, value] of rateLimits) if (now - value.start >= WINDOW_MS) rateLimits.delete(key);
   }
 
   try {
-    const body = req.body;
-
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      await securityAlert(req, ip, "Malformed request body", 400);
-      return res.status(400).json({ error: "Invalid request body" });
+    const body = req.body && typeof req.body === "object" ? req.body : null;
+    if (!body) {
+      await autoSecurityAlert("Malformed request body", req);
+      return res.status(400).json({ error: "Invalid body" });
     }
-
     const event = body.event;
     const look = EVENTS[event];
-
     if (!look) {
-      await securityAlert(req, ip, "Unknown event type", 400);
+      await autoSecurityAlert("Unknown event name sent to the log endpoint", req, { "❓ Event sent": clip(String(event), 60) || "(empty)" });
       return res.status(400).json({ error: "Invalid event" });
     }
 
-    const details = clip(body.details, 300);
-    const meta = body.meta && typeof body.meta === "object"
-      && !Array.isArray(body.meta) ? body.meta : {};
+    const webhook = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhook) return res.status(500).json({ error: "Logging not configured" });
 
-    const headers = req.headers;
-    const agent = readAgent(clip(headers["user-agent"], 400));
+    const details = clip(body.details, 300);
+    const meta = body.meta && typeof body.meta === "object" ? body.meta : {};
+    const h = req.headers;
+    const place = placeOf(h);
+    const agent = readAgent(clip(h["user-agent"], 400));
+    const deviceIcon = agent.device === "Mobile" ? "📱" : agent.device === "Tablet" ? "📲" : "💻";
+    const visits = Number.parseInt(meta.visits, 10);
 
     const fields = [
-      {
-        name: "Device",
-        value: `${agent.device}\n${agent.os}\n${agent.browser}${agent.bot ? "\nBot-like user agent" : ""}`,
-        inline: true
-      },
-      {
-        name: "Referrer",
-        value: referrerLabel(clip(meta.referrer, 300)),
-        inline: true
-      },
-      {
-        name: "Page",
-        value: clip(meta.page, 100) || "Not provided",
-        inline: true
-      },
-      {
-        name: "Language",
-        value: clip(meta.lang, 20) || clip(headers["accept-language"], 60) || "Unknown",
-        inline: true
-      },
-      {
-        name: "Screen / viewport",
-        value: `${clip(meta.screen, 30) || "Unknown"} / ${clip(meta.viewport, 30) || "Unknown"}`,
-        inline: true
-      },
-      {
-        name: "Site theme",
-        value: clip(meta.theme, 20) || "Unknown",
-        inline: true
-      },
-      {
-        name: "Client IP",
-        value: `\`${ip}\``,
-        inline: true
-      }
+      { name: "📍 Location", value: place, inline: true },
+      { name: `${deviceIcon} Device`, value: `${agent.device}${agent.bot ? " (bot?)" : ""}\n${agent.os}\n${agent.browser}`, inline: true },
+      { name: "🌍 Language", value: [clip(meta.lang, 20) || clip((h["accept-language"] || "").split(",")[0], 20) || "unknown",
+          meta.siteLang ? `site: ${clip(meta.siteLang, 5)}` : ""].filter(Boolean).join("\n"), inline: true },
+      { name: "🖥️ Screen", value: [clip(meta.screen, 20), meta.viewport ? `window ${clip(meta.viewport, 20)}` : "",
+          meta.theme ? `${clip(meta.theme, 10)} theme` : ""].filter(Boolean).join("\n") || "unknown", inline: true },
+      { name: "🔗 Came from", value: referrerLabel(clip(meta.referrer, 200)), inline: true },
+      { name: "🕐 Visitor time zone", value: clip(meta.tz, 40) || safeDecode(clip(h["x-vercel-ip-timezone"], 40)) || "unknown", inline: true }
     ];
-
-    if (event === "security") {
-      fields.push({
-        name: "Security details",
-        value: details || "No additional details provided",
-        inline: false
-      });
+    if (Number.isFinite(visits) && visits > 0) {
+      fields.push({ name: "🔁 Visits", value: visits === 1 ? "First visit from this browser" : `Visit #${visits} from this browser`, inline: true });
     }
+    if (meta.page) fields.push({ name: "📄 Page", value: "`" + clip(meta.page, 100).replace(/`/g, "'") + "`", inline: true });
+    fields.push({ name: "🌐 IP address", value: "`" + ip + "`", inline: true });
 
-    await sendDiscord({
-      title: `${look.icon} ${look.title}`,
-      description: details || undefined,
+    const embed = {
+      title: `${look.icon}  ${look.title}`,
+      description: details ? `**${details}**` : undefined,
       color: look.color,
       fields,
       footer: { text: `Rabat time · ${rabatTime()}` },
       timestamp: new Date().toISOString()
-    });
+    };
+
+    const ok = await postToDiscord(embed);
+    if (!ok) return res.status(502).json({ error: "Discord delivery failed" });
 
     return res.status(200).json({ ok: true });
   } catch {
