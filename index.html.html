@@ -631,13 +631,35 @@ html[lang="ar"] .svc h3{font-family:var(--font-ar);font-weight:700;font-size:1.5
 <script>
 // Sends privacy-conscious portfolio events to the same-origin Vercel API.
 // The Discord webhook URL stays server-side in Vercel environment variables.
+// Basic, non-identifying visit details sent with every event (language, screen, theme, where the visit came from).
+window.portfolioMeta = function () {
+  const m = {};
+  try {
+    m.lang = navigator.language || "";
+    m.siteLang = document.documentElement.lang || "";
+    m.screen = screen.width + "x" + screen.height;
+    m.viewport = window.innerWidth + "x" + window.innerHeight;
+    m.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    const t = document.documentElement.getAttribute("data-theme");
+    m.theme = t || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    m.referrer = document.referrer || "";
+    m.page = location.pathname + location.hash;
+    m.visits = Number(window.__portfolioVisits || 0);
+  } catch (error) {}
+  return m;
+};
+try {
+  const n = (Number(localStorage.getItem("portfolio-visits")) || 0) + 1;
+  localStorage.setItem("portfolio-visits", String(n));
+  window.__portfolioVisits = n;
+} catch (error) { window.__portfolioVisits = 0; }
 window.portfolioLog = function (event, details) {
   try {
     if (!/^(page_view|project_open|contact_click|cv_download|rating)$/.test(String(event || ""))) return;
     return fetch("/api/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: event, details: String(details || "").slice(0, 180) }),
+      body: JSON.stringify({ event: event, details: String(details || "").slice(0, 180), meta: window.portfolioMeta() }),
       keepalive: true
     }).catch(function () {});
   } catch (error) {}
