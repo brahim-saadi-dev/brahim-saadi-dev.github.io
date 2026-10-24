@@ -1,15 +1,21 @@
-
 const rateLimits = new Map();
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 15;
 
 const ALLOWED_EVENTS = new Set([
   "visit",
+  "page_view",
+  "project_open",
+  "contact_click",
+  "cv_download",
   "rating",
   "game",
   "submission",
   "security"
 ]);
+
+// Embed colours: red for security, green for CV downloads, blue for everything else.
+const COLORS = { security: 15158332, cv_download: 3066993 };
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -73,8 +79,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         allowed_mentions: { parse: [] },
         embeds: [{
-          title: `[${event.toUpperCase()}]`,
-          color: event === "security" ? 15158332 : 3447003,
+          title: `[${event.replace("_", " ").toUpperCase()}]`,
+          color: COLORS[event] || 3447003,
           fields: [
             { name: "Details", value: details || "No details" },
             { name: "Visitor IP", value: ip }
@@ -93,4 +99,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Logging failed" });
   }
 }
-
