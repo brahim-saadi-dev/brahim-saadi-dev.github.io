@@ -156,6 +156,15 @@ body.dark .site-header {
   border-color: var(--highlight);
 }
 
+.theme-toggle:focus-visible,
+.btn:focus-visible,
+.nav a:focus-visible,
+.contact-card:focus-visible,
+.project-card:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 2px;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -586,5 +595,21 @@ body.dark .btn-primary {
 
   .service-number {
     margin-bottom: -8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+
+  .btn,
+  .theme-toggle,
+  .nav a::after {
+    transition: none;
   }
 }
