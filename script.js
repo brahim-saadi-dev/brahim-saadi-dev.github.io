@@ -1,24 +1,45 @@
-const root = document.body;
+const body = document.body;
 const toggleButton = document.querySelector('.theme-toggle');
 const themeIcon = document.querySelector('.theme-icon');
+const THEME_KEY = 'portfolio-theme';
 
-const savedTheme = localStorage.getItem('portfolio-theme');
-if (savedTheme === 'dark') {
-  root.classList.add('dark');
-  themeIcon.textContent = '☾';
-} else {
-  themeIcon.textContent = '☀';
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  body.classList.toggle('dark', isDark);
+
+  if (toggleButton) {
+    toggleButton.setAttribute('aria-pressed', String(isDark));
+  }
+
+  if (themeIcon) {
+    themeIcon.textContent = isDark ? '☾' : '☀';
+  }
+
+  try {
+    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+  } catch (error) {
+    // Ignore storage restrictions in private browsing or locked-down situations.
+  }
 }
+
+function getStoredTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'dark' || saved === 'light') return saved;
+  } catch (error) {
+    // Ignore storage restrictions.
+  }
+
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
+applyTheme(getStoredTheme());
 
 if (toggleButton) {
   toggleButton.addEventListener('click', () => {
-    const isDark = root.classList.toggle('dark');
-    localStorage.setItem('portfolio-theme', isDark ? 'dark' : 'light');
-    themeIcon.textContent = isDark ? '☾' : '☀';
+    const nextTheme = body.classList.contains('dark') ? 'light' : 'dark';
+    applyTheme(nextTheme);
   });
-}
-
-const hero = document.querySelector('.hero');
-if (hero) {
-  hero.setAttribute('data-ready', 'true');
 }
