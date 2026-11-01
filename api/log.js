@@ -16,7 +16,12 @@ const EVENTS = {
   rating:        { icon: "⭐", title: "New rating",      color: 0xe67e22 },
   game:          { icon: "🎮", title: "Game played",     color: 0x1abc9c },
   submission:    { icon: "📝", title: "Form submitted",  color: 0x95a5a6 },
-  security:      { icon: "🚨", title: "Security alert",  color: 0xe74c3c }
+  security:      { icon: "🚨", title: "Security alert",  color: 0xe74c3c },
+  clone_attempt:   { icon: "🛡️", title: "Copy shortcut blocked", color: 0xffa500 },
+  language_change: { icon: "🌐", title: "Language switched",     color: 0x5dade2 },
+  theme_toggle:    { icon: "🌓", title: "Theme switched",        color: 0x8e44ad },
+  project_demo:    { icon: "🕹️", title: "Demo interaction",      color: 0x16a085 },
+  time_on_site:    { icon: "👋", title: "Visitor left",          color: 0x7f8c8d }
 };
 
 const clip = (value, max = 200) =>
@@ -56,6 +61,34 @@ function readAgent(ua = "") {
 
   const device = /iPad|Tablet/.test(ua) ? "Tablet" : /Mobi|iPhone|Android.*Mobile/.test(ua) ? "Mobile" : "Desktop";
   return { bot, browser, os, device };
+}
+
+// Chromium browsers also send these "Client Hints" headers, which are more exact
+// than guessing from the user-agent string (full platform name + version, and a
+// flag for whether the browser is actually a request automation tool).
+function clientHints(h) {
+  const uaHeader = clip(h["sec-ch-ua"], 200);
+  if (!uaHeader) return null;
+  const brands = [...uaHeader.matchAll(/"([^"]+)";v="(\d+)"/g)]
+    .map(m => m[1])
+    .filter(b => !/Not.?A.?Brand/i.test(b));
+  const platform = clip(h["sec-ch-ua-platform"], 40).replace(/"/g, "");
+  const platformVersion = clip(h["sec-ch-ua-platform-version"], 20).replace(/"/g, "");
+  const mobile = h["sec-ch-ua-mobile"] === "?1";
+  return {
+    brand: brands[brands.length - 1] || brands[0] || "",
+    platform: platform + (platformVersion ? ` ${platformVersion}` : ""),
+    mobile
+  };
+}
+
+function msToDuration(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n < 0) return "";
+  if (n < 1000) return n + "ms";
+  const s = n / 1000;
+  if (s < 60) return s.toFixed(1) + "s";
+  return Math.floor(s / 60) + "m " + Math.round(s % 60) + "s";
 }
 
 function rabatTime() {
@@ -180,12 +213,13 @@ export default async function handler(req, res) {
     const h = req.headers;
     const place = placeOf(h);
     const agent = readAgent(clip(h["user-agent"], 400));
-    const deviceIcon = agent.device === "Mobile" ? "📱" : agent.device === "Tablet" ? "📲" : "💻";
+    const hints = clientHints(h);
+    const deviceIcon = (hints && hints.mobile) || agent.device === "Mobile" ? "📱" : agent.device === "Tablet" ? "📲" : "💻";
     const visits = Number.parseInt(meta.visits, 10);
 
     const fields = [
       { name: "📍 Location", value: place, inline: true },
-      { name: `${deviceIcon} Device`, value: `${agent.device}${agent.bot ? " (bot?)" : ""}\n${agent.os}\n${agent.browser}`, inline: true },
+      { name: `${deviceIcon} Device`, value: `${agent.device}${agent.bot ? " (bot?)" : ""}\n${hints ? hints.platform || agent.os : agent.os}\n${hints && hints.brand ? hints.brand : agent.browser}`, inline: true },
       { name: "🌍 Language", value: [clip(meta.lang, 20) || clip((h["accept-language"] || "").split(",")[0], 20) || "unknown",
           meta.siteLang ? `site: ${clip(meta.siteLang, 5)}` : ""].filter(Boolean).join("\n"), inline: true },
       { name: "🖥️ Screen", value: [clip(meta.screen, 20), meta.viewport ? `window ${clip(meta.viewport, 20)}` : "",
@@ -193,6 +227,13 @@ export default async function handler(req, res) {
       { name: "🔗 Came from", value: referrerLabel(clip(meta.referrer, 200)), inline: true },
       { name: "🕐 Visitor time zone", value: clip(meta.tz, 40) || safeDecode(clip(h["x-vercel-ip-timezone"], 40)) || "unknown", inline: true }
     ];
+    const specs = [
+      meta.cores ? `${clip(String(meta.cores), 6)} CPU cores` : "",
+      meta.mem ? `~${clip(String(meta.mem), 10)} RAM` : "",
+      meta.net ? `${clip(String(meta.net), 10)} connection` : ""
+    ].filter(Boolean).join("\n");
+    if (specs) fields.push({ name: "🧠 Device specs", value: specs, inline: true });
+    if (meta.ms !== undefined) fields.push({ name: "⏱️ Time on page", value: msToDuration(meta.ms) || "just loaded", inline: true });
     if (Number.isFinite(visits) && visits > 0) {
       fields.push({ name: "🔁 Visits", value: visits === 1 ? "First visit from this browser" : `Visit #${visits} from this browser`, inline: true });
     }
